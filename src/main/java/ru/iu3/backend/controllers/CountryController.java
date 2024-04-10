@@ -39,7 +39,7 @@ public class CountryController {
         if (cc.isPresent()) {
             country = cc.get();
             country.name = countryDetails.name;
-            countryRepository.save(country);
+            countryRepository.save(country);//
             return ResponseEntity.ok(country);
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "country not found");
