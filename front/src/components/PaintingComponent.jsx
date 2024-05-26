@@ -8,18 +8,29 @@ import {Form} from "react-bootstrap";
 import {useNavigate, useParams} from "react-router-dom";
 import {faChevronLeft, faSave} from "@fortawesome/free-solid-svg-icons";
 
-const CountryComponent = props => {
+const PaintingComponent = props => {
     const params = useParams();
+
     const [id, setId] = useState(params.id);
     const [name, setName] = useState("");
+    const [year, setYear] = useState(0);
+
+    // Приходится использовать пока что дефолтное значение внешнего ключа, иначе будет ошибка
+    const [museum, setMuseum] = useState(2);
+    const [artist, setArtist] = useState(2);
+
     const [hidden, setHidden] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         if (parseInt(id) !== -1) {
-            BackendService.retrieveCountry(id)
+            BackendService.retrievePainting(id)
                 .then((resp) => {
                     setName(resp.data.name)
+                    setYear(resp.data.year)
+
+                    setArtist(resp.data.artist);
+                    setMuseum(resp.data.museum);
                 })
                 .catch(() => setHidden(true))
         }
@@ -30,18 +41,23 @@ const CountryComponent = props => {
         event.preventDefault();
         event.stopPropagation();
         let err = null;
-        if (!name) err = "Название страны должно быть указано";
-        if (err) props.dispatch(alertActions.error(err));
-        let country = {id, name};
 
-        if (parseInt(country.id) === -1) {
-            BackendService.createCountry(country)
-                .then(() => navigate(`/countries`))
+        if (!name) err = "Название художника должно быть указано";
+        if (!year) err = "Возраст художника должен быть указан";
+
+        if (err) props.dispatch(alertActions.error(err));
+        let painting = {id, name, museum, artist, year};
+
+        //console.log(painting)
+
+        if (parseInt(painting.id) === -1) {
+            BackendService.createPainting(painting)
+                .then(() => navigate(`/paintings`))
                 .catch(() => {
                 })
         } else {
-            BackendService.updateCountry(country)
-                .then(() => navigate(`/countries`))
+            BackendService.updatePainting(painting)
+                .then(() => navigate(`/paintings`))
                 .catch(() => {
                 })
         }
@@ -52,22 +68,44 @@ const CountryComponent = props => {
     return (
         <div className="m-4">
             <div className=" row my-2 mr-0">
-                <h3>Страна</h3>
+                <h3>Картина</h3>
                 <button className="btn btn-outline-secondary ml-auto"
-                        onClick={() => navigate(`/countries`)}
+                        onClick={() => navigate(`/paintings`)}
                 ><FontAwesomeIcon icon={faChevronLeft}/>{' '}Назад</button>
             </div>
             <Form onSubmit={onSubmit}>
                 <Form.Group>
-                    <Form.Label>Название</Form.Label>
+                    <Form.Label>Имя</Form.Label>
                     <Form.Control
                         type="text"
-                        placeholder="Введите название страны"
+                        placeholder="Введите имя картины"
                         onChange={(e) => {setName(e.target.value)}}
                         value={name}
                         name="name"
                         autoComplete="off"
                     />
+
+                    <Form.Label>Возраст</Form.Label>
+                    <Form.Control
+                        type="text"
+                        placeholder="Введите год"
+                        onChange={(e) => {setYear(e.target.value)}}
+                        value={year}
+                        name="age"
+                        autoComplete="off"
+                    />
+
+                    {/*<Form.Label>Номер страны</Form.Label>*/}
+                    {/*<Form.Control*/}
+                    {/*    type="text"*/}
+                    {/*    pattern="[0-9]*"*/}
+                    {/*    placeholder="Введите референсную страну"*/}
+                    {/*    onChange={(e) => {setCountryID(parseInt(e.target.value, 10))}}*/}
+                    {/*    value={countryid}*/}
+                    {/*    name="countryID"*/}
+                    {/*    autoComplete="off"*/}
+                    {/*/>*/}
+
                 </Form.Group>
                 <button className="btn btn-outline-secondary" type="submit">
                     <FontAwesomeIcon icon={faSave}/>{' '}
@@ -78,4 +116,4 @@ const CountryComponent = props => {
     )
 }
 
-export default connect()(CountryComponent);
+export default connect()(PaintingComponent);

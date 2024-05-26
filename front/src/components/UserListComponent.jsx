@@ -5,11 +5,12 @@ import Alert from './Alert'
 import BackendService from "../services/BackendService";
 import {useNavigate} from 'react-router-dom';
 import PaginationComponent from "./PaginationComponent";
+import {alertActions} from "../utils/Rdx";
 
-const CountryListComponent = props => {
+const UserListComponent = props => {
     const [message, setMessage] = useState();
-    const [countries, setCountries] = useState([]);
-    const [selectedCountries, setSelectedCountries] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [selectedUsers, setSelectedUsers] = useState([]);
     const [show_alert, setShowAlert] = useState(false);
     const [checkedItems, setCheckedItems] = useState([]);
     const [hidden, setHidden] = useState(false);
@@ -21,12 +22,12 @@ const CountryListComponent = props => {
     const limit = 2;
 
     const setChecked = v => {
-        setCheckedItems(Array(countries.length).fill(v));
+        setCheckedItems(Array(users.length).fill(v));
     }
 
     // Функция загрузки страницы
     const onPageChanged = cp => {
-        refreshCountries(cp - 1);
+        refreshUsers(cp - 1);
     }
 
     const handleCheckChange = e => {
@@ -43,9 +44,9 @@ const CountryListComponent = props => {
         setChecked(isChecked);
     }
 
-    const deleteCountriesClicked = () => {
+    const deleteUsersClicked = () => {
         let x = [];
-        countries.map((t, idx) => {
+        users.map((t, idx) => {
             if (checkedItems[idx]) {
                 x.push(t)
             }
@@ -54,22 +55,21 @@ const CountryListComponent = props => {
         if (x.length > 0) {
             var msg;
             if (x.length > 1) {
-                msg = "Пожалуйста подтвердите удаление " + x.length + " стран";
-            } else
-            {
-                msg = "Пожалуйста подтвердите удаление страны " + x[0].name;
+                msg = "Пожалуйста подтвердите удаление " + x.length + " пользователей";
+            } else {
+                msg = "Пожалуйста подтвердите удаление пользователя " + x[0].login;
             }
 
             setShowAlert(true);
-            setSelectedCountries(x);
+            setSelectedUsers(x);
             setMessage(msg);
         }
     }
 
-    const refreshCountries = cp => {
-        BackendService.retrieveAllCountries(cp, limit).then(
+    const refreshUsers = cp => {
+        BackendService.retrieveAllUsers(cp, limit).then(
             resp => {
-                setCountries(resp.data.content);
+                setUsers(resp.data.content);
                 setHidden(false);
                 setTotalCount(resp.data.totalElements);
                 setPage(cp);
@@ -77,32 +77,44 @@ const CountryListComponent = props => {
         ).catch(() => {
             setHidden(true);
             setTotalCount(0);
-        })
-            .finally(() => setChecked(false))
+        }).finally(() => setChecked(false))
     }
 
     useEffect(() => {
-        refreshCountries(page);
+        refreshUsers(page);
     }, [])
 
-    const updateCountryClicked = id => {
-        navigate(`/countries/${id}`)
-    }
+    // Было решено убрать кнопку редактирования чужих пользовательских данных
+
+    // const updateUserClicked = id => {
+    //     navigate(`/users/${id}`)
+    // }
 
     const onDelete = () => {
-        BackendService.deleteCountries(selectedCountries)
-            .then(() => refreshCountries(page))
-            .catch(() => {
-            })
+        let canRemove = true;
+        let user = null;
+        for (let i = 0; i < selectedUsers.length; ++i) {
+            if (selectedUsers[i].museums.length > 0) {
+                canRemove = false;
+                user = selectedUsers[i];
+            }
+        }
+
+        if (canRemove) {
+            BackendService.deleteUsers(selectedUsers)
+                .then(() => refreshUsers(page))
+                .catch(() => {
+                })
+        }
     }
 
     const closeAlert = () => {
         setShowAlert(false)
     }
 
-    const addCountryClicked = () => {
-        navigate(`/countries/-1`)
-    }
+    // const addUserClicked = () => {
+    //     navigate(`/users/-1`)
+    // }
 
     if (hidden) {
         return null;
@@ -111,17 +123,17 @@ const CountryListComponent = props => {
     return (
         <div className="m-4">
             <div className="row my-2">
-                <h3>Страны</h3>
+                <h3>Пользователи</h3>
                 <div className="btn-toolbar">
                     <div className="btn-group ms-auto">
-                        <button className="btn btn-outline-secondary"
-                                onClick={addCountryClicked}>
-                            <FontAwesomeIcon icon={faPlus}/>{' '}Добавить
-                        </button>
+                        {/*<button className="btn btn-outline-secondary"*/}
+                        {/*        onClick={addUserClicked}>*/}
+                        {/*    <FontAwesomeIcon icon={faPlus}/>{' '}Добавить*/}
+                        {/*</button>*/}
                     </div>
                     <div className="btn-group ms-2">
                         <button className="btn btn-outline-secondary"
-                                onClick={deleteCountriesClicked}>
+                                onClick={deleteUsersClicked}>
                             <FontAwesomeIcon icon={faTrash}/>{' '}Удалить
                         </button>
                     </div>
@@ -137,7 +149,8 @@ const CountryListComponent = props => {
                 <table className="table table-sm">
                     <thead className="thead-light">
                     <tr>
-                        <th>Название</th>
+                        <th>Логин</th>
+                        <th>Электронная почта</th>
                         <th>
                             <div className="btn-toolbar pb-1">
                                 <div className="btn-group ms-auto">
@@ -149,22 +162,23 @@ const CountryListComponent = props => {
                     </thead>
 
                     <tbody> {
-                        countries && countries.map((country, index) =>
-                            <tr key={country.id}>
-                                <td>{country.name}</td>
+                        users && users.map((user, index) =>
+                            <tr key={user.id}>
+                                <td>{user.login}</td>
+                                <td>{user.email}</td>
                                 <td>
                                     <div className="btn-toolbar">
                                         <div className="btn-group ms-auto">
-                                            <button className="btn btn-outline-secondary btn-sm btn-toolbar"
-                                                    onClick={() =>
-                                                        updateCountryClicked(country.id)}>
-                                                <FontAwesomeIcon icon={faEdit} fixedWidth/>
-                                            </button>
+                                            {/*<button className="btn btn-outline-secondary btn-sm btn-toolbar"*/}
+                                            {/*        onClick={() =>*/}
+                                            {/*            updateUserClicked(user.id)} disabled={}>*/}
+                                            {/*    <FontAwesomeIcon icon={faEdit} fixedWidth/>*/}
+                                            {/*</button>*/}
                                         </div>
 
                                         <div className="btn-group ms-2 mt-1">
                                             <input type="checkbox" name={index}
-                                                   checked={checkedItems.length > index ? checkedItems[index]: false}
+                                                   checked={checkedItems.length > index ? checkedItems[index] : false}
                                                    onChange={handleCheckChange}/>
                                         </div>
                                     </div>
@@ -186,4 +200,4 @@ const CountryListComponent = props => {
     )
 }
 
-export default CountryListComponent;
+export default UserListComponent;

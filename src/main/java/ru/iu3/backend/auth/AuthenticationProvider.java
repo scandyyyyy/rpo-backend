@@ -19,9 +19,9 @@ import java.util.Optional;
 @Component
 public class AuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
 
+
     @Value("${private.session-timeout}")
     private int sessionTimeout;
-
     @Autowired
     UserRepository userRepository;
 
@@ -30,6 +30,7 @@ public class AuthenticationProvider extends AbstractUserDetailsAuthenticationPro
                                                   UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken) throws AuthenticationException {
 
     }
+
 
     @Override
     protected UserDetails retrieveUser(String userName,
@@ -43,23 +44,24 @@ public class AuthenticationProvider extends AbstractUserDetailsAuthenticationPro
         ru.iu3.backend.models.User u = uu.get();
 
         boolean timeout = true;
-        LocalDateTime dt  = LocalDateTime.now();
+        LocalDateTime dt = LocalDateTime.now();
+
         if (u.activity != null) {
             LocalDateTime nt = u.activity.plusMinutes(sessionTimeout);
             if (dt.isBefore(nt))
                 timeout = false;
         }
+
         if (timeout) {
             u.token = null;
             userRepository.save(u);
             throw new NonceExpiredException("session is expired");
-        }
-        else {
+        } else {
             u.activity = dt;
             userRepository.save(u);
         }
 
-        UserDetails user= new User(u.login, u.password,
+        UserDetails user = new User(u.login, u.password,
                 true,
                 true,
                 true,
@@ -67,5 +69,4 @@ public class AuthenticationProvider extends AbstractUserDetailsAuthenticationPro
                 AuthorityUtils.createAuthorityList("USER"));
         return user;
     }
-
 }

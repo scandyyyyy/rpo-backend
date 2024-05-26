@@ -1,20 +1,29 @@
 package ru.iu3.backend.controllers;
 
-import ru.iu3.backend.models.User;
-import ru.iu3.backend.tools.Utils;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import ru.iu3.backend.models.User;
 import ru.iu3.backend.repositories.UserRepository;
+import ru.iu3.backend.tools.Utils;
 
-import java.time.LocalDateTime;
-import java.util.*;
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/auth")
 public class LoginController {
+
     @Autowired
     private UserRepository userRepository;
 
@@ -29,7 +38,7 @@ public class LoginController {
                 String hash1 = u2.password;
                 String salt = u2.salt;
                 String hash2 = Utils.ComputeHash(pwd, salt);
-                if (hash1.toLowerCase().equals(hash2.toLowerCase())) {
+                if (hash1.equalsIgnoreCase(hash2)) {
                     String token = UUID.randomUUID().toString();
                     u2.token = token;
                     u2.activity = LocalDateTime.now();
@@ -40,8 +49,10 @@ public class LoginController {
         }
         return new ResponseEntity<Object>(HttpStatus.UNAUTHORIZED);
     }
+
     @GetMapping("/logout")
-    public ResponseEntity<Object> logout(@RequestHeader(value = "Authorization", required = false) String token) {
+    public ResponseEntity logout(
+            @RequestHeader(value = "Authorization", required = false) String token) {
         if (token != null && !token.isEmpty()) {
             token = StringUtils.removeStart(token, "Bearer").trim();
             Optional<User> uu = userRepository.findByToken(token);
@@ -49,9 +60,9 @@ public class LoginController {
                 User u = uu.get();
                 u.token = null;
                 userRepository.save(u);
-                return new ResponseEntity<>(HttpStatus.OK);
+                return new ResponseEntity(HttpStatus.OK);
             }
         }
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity(HttpStatus.UNAUTHORIZED);
     }
 }

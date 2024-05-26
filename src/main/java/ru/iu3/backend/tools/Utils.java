@@ -13,7 +13,7 @@ public class Utils {
             digest = MessageDigest.getInstance("SHA-256");
         }
         catch (Exception ex) {
-            return new String();
+            return "";
         }
         return new String(Hex.encode(digest.digest(w)));
     }

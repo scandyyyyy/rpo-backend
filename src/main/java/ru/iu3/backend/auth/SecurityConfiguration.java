@@ -18,25 +18,22 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 
 import static ru.iu3.backend.auth.JwtDsl.jwtDsl;
+
 @Configuration
 @EnableWebSecurity
-
-
-
-
 public class SecurityConfiguration {
+
     @Autowired
     private AuthenticationProvider authProvider;
+
     @Bean
     public AuthenticationManager authManager(HttpSecurity http) throws Exception {
-    AuthenticationManagerBuilder authenticationManagerBuilder =
-            http.getSharedObject(AuthenticationManagerBuilder.class);
-    authenticationManagerBuilder.authenticationProvider(authProvider);
-    return authenticationManagerBuilder.build();
-}
-
+        AuthenticationManagerBuilder authenticationManagerBuilder =
+                http.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder.authenticationProvider(authProvider);
+        return authenticationManagerBuilder.build();
+    }
     @Bean
-
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors()
@@ -50,6 +47,7 @@ public class SecurityConfiguration {
                 .apply(jwtDsl());
         return http.build();
     }
+
     CorsConfigurationSource corsConfigurationSource(){
         final var configuration = new CorsConfiguration();
         configuration.addAllowedOriginPattern("http://localhost:3000");
@@ -62,9 +60,8 @@ public class SecurityConfiguration {
     }
 
     @Bean
-
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers("/auth/login", "/auth/logout");
     }
 
-    }
+}

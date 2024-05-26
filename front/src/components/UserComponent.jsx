@@ -8,18 +8,22 @@ import {Form} from "react-bootstrap";
 import {useNavigate, useParams} from "react-router-dom";
 import {faChevronLeft, faSave} from "@fortawesome/free-solid-svg-icons";
 
-const CountryComponent = props => {
+const UserComponent = props => {
     const params = useParams();
+
     const [id, setId] = useState(params.id);
-    const [name, setName] = useState("");
+    const [login, setLogin] = useState("");
+    const [email, setEmail] = useState("");
+
     const [hidden, setHidden] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         if (parseInt(id) !== -1) {
-            BackendService.retrieveCountry(id)
+            BackendService.retrieveUser(id)
                 .then((resp) => {
-                    setName(resp.data.name)
+                    setLogin(resp.data.login)
+                    setEmail(resp.data.email)
                 })
                 .catch(() => setHidden(true))
         }
@@ -30,18 +34,20 @@ const CountryComponent = props => {
         event.preventDefault();
         event.stopPropagation();
         let err = null;
-        if (!name) err = "Название страны должно быть указано";
-        if (err) props.dispatch(alertActions.error(err));
-        let country = {id, name};
+        if (!login) err = "Название страны должно быть указано";
+        if (!email) err = "Название email должно быть указано";
 
-        if (parseInt(country.id) === -1) {
-            BackendService.createCountry(country)
-                .then(() => navigate(`/countries`))
+        if (err) props.dispatch(alertActions.error(err));
+        let user = {id, login, email};
+
+        if (parseInt(user.id) === -1) {
+            BackendService.createUser(user)
+                .then(() => navigate(`/users`))
                 .catch(() => {
                 })
         } else {
-            BackendService.updateCountry(country)
-                .then(() => navigate(`/countries`))
+            BackendService.updateUser(user)
+                .then(() => navigate(`/users`))
                 .catch(() => {
                 })
         }
@@ -52,20 +58,30 @@ const CountryComponent = props => {
     return (
         <div className="m-4">
             <div className=" row my-2 mr-0">
-                <h3>Страна</h3>
+                <h3>Пользователи</h3>
                 <button className="btn btn-outline-secondary ml-auto"
-                        onClick={() => navigate(`/countries`)}
+                        onClick={() => navigate(`/users`)}
                 ><FontAwesomeIcon icon={faChevronLeft}/>{' '}Назад</button>
             </div>
             <Form onSubmit={onSubmit}>
                 <Form.Group>
-                    <Form.Label>Название</Form.Label>
+                    <Form.Label>Логин</Form.Label>
                     <Form.Control
                         type="text"
-                        placeholder="Введите название страны"
-                        onChange={(e) => {setName(e.target.value)}}
-                        value={name}
-                        name="name"
+                        placeholder="Введите логин"
+                        onChange={(e) => {setLogin(e.target.value)}}
+                        value={login}
+                        name="login"
+                        autoComplete="off"
+                    />
+
+                    <Form.Label>Электро почта</Form.Label>
+                    <Form.Control
+                        type="text"
+                        placeholder="Введите электро почту"
+                        onChange={(e) => {setEmail(e.target.value)}}
+                        value={email}
+                        name="email"
                         autoComplete="off"
                     />
                 </Form.Group>
@@ -78,4 +94,4 @@ const CountryComponent = props => {
     )
 }
 
-export default connect()(CountryComponent);
+export default connect()(UserComponent);
